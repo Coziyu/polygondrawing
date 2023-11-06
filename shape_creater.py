@@ -46,7 +46,7 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
     pygame.init()
 
     window = pygame.display.set_mode((window_width, window_height))
-    pygame.display.set_caption("Shape Creater")
+    pygame.display.set_caption(f"Shape Creater: {'New Shape' if fileName == '' else fileName}")
     clock = pygame.time.Clock()
     font = pygame.font.SysFont("Courier New" , 12)        
 
@@ -124,8 +124,9 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
         #* Update
         currTime = pygame.time.get_ticks()
 
-        # ! Should probably refactor into a function with a switch statement that takes in 
-        # ! unique eventcodes to handle events buttt this is a school project so I don't care
+        # ! Should refactor into a function with a switch statement 
+        # ! that takes in unique eventcodes to handle events 
+        # ! buttt this is a school project so I don't care
         if evPrintHistory:
             history.print()
             evPrintHistory = False
@@ -157,8 +158,9 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
             save_shape(currentShape, window_width, window_height, outFileName)
             # Removes "Saving" from the terminal and replaces it with "Saved"
             print("\033[F\033[K\033[F\033[KSaved")
+            fileName = outFileName
             evNewMessage = True
-            currentMessage = f"Saved file to {os.path.join(os.getcwd(), config.OUTPUT_FOLDER, outFileName)}"
+            currentMessage = f"Saved file to {os.path.join(os.getcwd(), config.OUTPUT_FOLDER, fileName)}"
             evSave = False
 
         elif evDragInitiated:
