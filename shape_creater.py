@@ -1,6 +1,17 @@
 from util import * 
 from primative_renderer import *
 
+def save_shape(shape, width, height, filename):
+    path = os.path.join("shapes", filename)
+    file = open(path, "w+")
+    outputShape = convert_shape_to_central_origin_coords(copy.deepcopy(shape), width, height)
+    for i in range(len(outputShape)):
+        if len(outputShape[i]) == 2:
+            file.write(str(outputShape[i][0]) + "," + str(outputShape[i][1]) + "\n")
+        elif len(outputShape[i]) == 4:
+            file.write(str(outputShape[i][0]) + "," + str(outputShape[i][1]) + "," + str(outputShape[i][2]) + "," + str(outputShape[i][3]) + "\n")
+    file.close()
+
 def add_control_points(shape):
     if len(shape) == 0:
         add_point(shape)
@@ -23,7 +34,7 @@ def shape_creater(window_width = 800, window_height = 800):
     pygame.init()
 
     window = pygame.display.set_mode((window_width, window_height))
-    pygame.display.set_caption("Shape Drawer")
+    pygame.display.set_caption("Shape Creater")
     clock = pygame.time.Clock()
     font = pygame.font.SysFont("Arial" , 18 , bold = True)
 
@@ -47,6 +58,7 @@ def shape_creater(window_width = 800, window_height = 800):
     evPrintHistory = False
     evUndo = False
     evRedo = False
+    evSave = False
     # Poll Update Render Loop:
     while running:
         # Poll Events
@@ -76,6 +88,8 @@ def shape_creater(window_width = 800, window_height = 800):
                     evRedo = True
                 elif events.key == pygame.K_i and pygame.key.get_mods() & pygame.KMOD_CTRL:
                     evAddCurve = True
+                elif events.key == pygame.K_s and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    evSave = True
                 elif events.key == pygame.K_i:
                     evAddPoint = True
                 elif events.key == pygame.K_TAB:
@@ -97,6 +111,17 @@ def shape_creater(window_width = 800, window_height = 800):
             print("Redoing")
             currentShape = history.unpop()
             evRedo = False
+
+        elif evSave:
+            print("Saving")
+            outFileName = input("Enter a filename: ")
+            if outFileName == "":
+                # Creates "shape (n).txt" where n is the number of shapes saved
+                outFileName = f"shape_{str(len(os.listdir('shapes')))}.txt"
+            save_shape(currentShape, window_width, window_height, outFileName)
+            # Removes "Saving" from the terminal and replaces it with "Saved"
+            print("\033[F\033[K\033[F\033[KSaved")
+            evSave = False
 
         elif evDragInitiated:
             mouse_pos = pygame.mouse.get_pos()

@@ -2,6 +2,7 @@ import copy
 import pygame
 import math
 import random
+import os
 
 class Stack:
     def __init__(self):
@@ -86,6 +87,20 @@ def to_pygame_coords(coord, width, height):
 def to_central_origin_coords(coord, width, height):
     # Convert the point to central origin coordinates
     return (coord[0] - width/2, height/2 - coord[1])
+
+def convert_shape_to_central_origin_coords(shape, width, height):
+    # Convert the shape to central origin coordinates
+    for i in range(len(shape)):
+        if len(shape[i]) == 2:
+            shape[i] = to_central_origin_coords(shape[i], width, height)
+        elif len(shape[i]) == 4:
+            c1 = to_central_origin_coords(shape[i][0:2], width, height)
+            c2 = to_central_origin_coords(shape[i][2:4], width, height)
+            shape[i] = (c1[0], c1[1], c2[0], c2[1])
+        else:
+            print("Error: Invalid Shape")
+            exit(-1)
+    return shape
 
 def convert_shape_to_pygame_coords(shape, width, height):
     # Convert the shape to pygame coordinates
