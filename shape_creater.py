@@ -238,8 +238,11 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
                     evNewMessage = True 
                     currentMessage = "Removed Point"
                     break
-        
-        if evNewMessage:
+                
+        #! Important to always handle subsequent events on the next frame
+        #! Prevent timing issues when facing blocking events like 
+        #! saving a new file
+        elif evNewMessage:
             messageStartTime = currTime
             messageAlpha = 1
 
