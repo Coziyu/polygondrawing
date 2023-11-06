@@ -30,7 +30,7 @@ def add_point(shape):
         new_point = (round(last_point[0] + radius * math.cos(angle)), round(last_point[1] + radius * math.sin(angle)))
         shape.append(new_point)
 
-def show_message(message, msgcolor, bgcolor, alpha, font, window):
+def show_action_notification(message, msgcolor, bgcolor, alpha, font, window):
     # Render the message
     text = font.render(message, True, msgcolor, bgcolor)
     text.set_alpha(alpha * 255)
@@ -62,16 +62,24 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
     history = Stack(currentShape)
     running = True
 
-    messageStartTime = -1
+    #! A message object should it's own class tbh
+    #! Then we have have a message handler that handles the messages
+    #! With that, we can do message queues,
+    #! easier message customization via notification types
+    #! And more importantly, the code is cleaner
+    #* actnNotif is short for action notification
+    #* This is the small notification at the bottom right
+    #* that appears when an action is performed
+    actnNotifStartTime = -1
     currTime = 0
-    currentMessage = ""
-    messageAlpha = 0
+    currNotifMessage = ""
+    notifAlpha = 0
 
     heldPointIndex = 0
     heldControlIndex = 0
 
-    evNewMessage = False
-    evDisplayingMessage = False
+    evNewActnNotif = False
+    evShowingActnNotif = False
 
     evAddPoint = False
     evAddCurve = False
@@ -134,15 +142,15 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
         elif evUndo:
             print("Undoing")
             currentShape = history.pop()
-            evNewMessage = True
-            currentMessage = "Undo"
+            evNewActnNotif = True
+            currNotifMessage = "Undo"
             evUndo = False
 
         elif evRedo:
             print("Redoing")
             currentShape = history.unpop()
-            evNewMessage = True
-            currentMessage = "Redo"
+            evNewActnNotif = True
+            currNotifMessage = "Redo"
             evRedo = False
 
         elif evSave:
@@ -159,8 +167,8 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
             # Removes "Saving" from the terminal and replaces it with "Saved"
             print("\033[F\033[K\033[F\033[KSaved")
             fileName = outFileName
-            evNewMessage = True
-            currentMessage = f"Saved file to {os.path.join(os.getcwd(), config.OUTPUT_FOLDER, fileName)}"
+            evNewActnNotif = True
+            currNotifMessage = f"Saved file to {os.path.join(os.getcwd(), config.OUTPUT_FOLDER, fileName)}"
             evSave = False
 
         elif evDragInitiated:
@@ -193,8 +201,8 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
                 print("Dropped Point")
                 evDraggingPoint = False
                 evDraggingControl = False
-                evNewMessage = True
-                currentMessage = "Moved Point" if evDraggingPoint else "Moved Control Point"
+                evNewActnNotif = True
+                currNotifMessage = "Moved Point" if evDraggingPoint else "Moved Control Point"
             evDroppedPoint = False
 
         elif evDraggingPoint:
@@ -213,8 +221,8 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
             currentShape = history.append(currentShape)
             print("Adding Point")
             add_point(currentShape)
-            evNewMessage = True
-            currentMessage = "Added Point"
+            evNewActnNotif = True
+            currNotifMessage = "Added Point"
             evAddPoint = False
 
         elif evAddCurve:
@@ -223,8 +231,8 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
             print("Adding Curve")
             add_control_points(currentShape)
             add_point(currentShape)
-            evNewMessage = True
-            currentMessage = "Added Curve"
+            evNewActnNotif = True
+            currNotifMessage = "Added Curve"
             evAddCurve = False
 
         elif evRemovingPoint:
@@ -235,19 +243,19 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
                     print("Removing Point")
                     currentShape = history.append(currentShape)
                     currentShape.pop(i)
-                    evNewMessage = True 
-                    currentMessage = "Removed Point"
+                    evNewActnNotif = True 
+                    currNotifMessage = "Removed Point"
                     break
                 
         #! Important to always handle subsequent events on the next frame
         #! Prevent timing issues when facing blocking events like 
         #! saving a new file
-        elif evNewMessage:
-            messageStartTime = currTime
-            messageAlpha = 1
+        elif evNewActnNotif:
+            actnNotifStartTime = currTime
+            notifAlpha = 1
 
-            evDisplayingMessage = True
-            evNewMessage = False
+            evShowingActnNotif = True
+            evNewActnNotif = False
 
 
 
@@ -262,17 +270,16 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
 
         #* Render UI Elements
 
-
-        if evDisplayingMessage:
-            show_message(currentMessage, (255, 255, 255), (50, 50, 50), messageAlpha,font, window)
-            if currTime - messageStartTime > 2000:
-                currentMessage = ""
-                messageStartTime = -1
-                evDisplayingMessage = False
-            elif currTime - messageStartTime > 1000:
-                # Fades the message out over 1 second
+        if evShowingActnNotif:
+            show_action_notification(currNotifMessage, (255, 255, 255), (0, 100, 0), notifAlpha,font, window)
+            if currTime - actnNotifStartTime > 2000:
+                currNotifMessage = ""
+                actnNotifStartTime = -1
+                evShowingActnNotif = False
+            elif currTime - actnNotifStartTime > 1000:
+                # Fades the notification out over 1 second
                 # map time diff to alpha [1000:2000] -> [1,0]
-                messageAlpha = max(1 - (currTime - messageStartTime - 1000)/1000, 0)
+                notifAlpha = max(1 - (currTime - actnNotifStartTime - 1000)/1000, 0)
     
 
             
