@@ -75,15 +75,21 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
     currNotifMessage = ""
     notifAlpha = 0
 
-    heldPointIndex = 0
-    heldControlIndex = 0
+    #* Indices of the hovered point and control points that are howevered over
+    hoveredPointIndex = 0
+    hoveredControlIndex = 0 # Tells us which control point is being hovered over
 
     evNewActnNotif = False
     evShowingActnNotif = False
 
+    evCheckForInteractable = False
+    evHoverInteractable = False
+
     evAddPoint = False
     evAddCurve = False
     evRemovingPoint = False
+    evHoverPoint = False
+    evHoverControl = False
     evDraggingPoint = False
     evDraggingControl = False
     evDroppedPoint = False
@@ -99,6 +105,10 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
         for events in pygame.event.get():
             if events.type == pygame.QUIT:
                 running = False
+
+            if events.type == pygame.MOUSEMOTION:
+                evCheckForInteractable = True
+
             if events.type == pygame.MOUSEBUTTONDOWN:
                 # If LB is held on a point, move that point
                 if events.button == pygame.BUTTON_LEFT:
@@ -132,13 +142,44 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
         #* Update
         currTime = pygame.time.get_ticks()
 
+        if evCheckForInteractable and not (evDraggingPoint or evDraggingControl):
+            mouse_pos = pygame.mouse.get_pos()
+            # Check is cursor is over a point
+            for i in range(len(currentShape)):
+                if len(currentShape[i]) == 2 and (distance(currentShape[i], mouse_pos) < 5):
+                    hoveredPointIndex = i
+                    evHoverPoint = True
+                    break
+                elif len(currentShape[i]) == 4 and (distance(currentShape[i][0:2], mouse_pos) < 5):
+                    hoveredPointIndex = i
+                    hoveredControlIndex = 0
+                    evHoverControl = True
+                    break
+                elif len(currentShape[i]) == 4 and (distance(currentShape[i][2:4], mouse_pos) < 5):
+                    hoveredPointIndex = i
+                    hoveredControlIndex = 1
+                    evHoverControl = True
+                    break
+                else:
+                    evHoverPoint = False
+                    evHoverControl = False
+                    hoveredPointIndex = None
+            evHoverInteractable = evHoverPoint or evHoverControl
+
+            if evHoverInteractable:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            else:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+            evCheckForInteractable = False
+
         # ! Should refactor into a function with a switch statement 
         # ! that takes in unique eventcodes to handle events 
         # ! buttt this is a school project so I don't care
         if evPrintHistory:
             history.print()
             evPrintHistory = False
-
+        
         elif evUndo:
             print("Undoing")
             currentShape = history.pop()
@@ -172,28 +213,11 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
             evSave = False
 
         elif evDragInitiated:
-            mouse_pos = pygame.mouse.get_pos()
-            for i in range(len(currentShape)):
-                if len(currentShape[i]) == 2 and (distance(currentShape[i], mouse_pos) < 5):
-                    print("Moving Point")
-                    currentShape = history.append(currentShape)
-                    evDraggingPoint = True
-                    heldPointIndex = i
-                    break
-                elif len(currentShape[i]) == 4 and (distance(currentShape[i][0:2], mouse_pos) < 5):
-                    print("Moving Control Point")
-                    currentShape = history.append(currentShape)
-                    evDraggingControl = True
-                    heldPointIndex = i
-                    heldControlIndex = 0
-                    break
-                elif len(currentShape[i]) == 4 and (distance(currentShape[i][2:4], mouse_pos) < 5):
-                    print("Moving Control Point")
-                    currentShape = history.append(currentShape)
-                    evDraggingControl = True
-                    heldPointIndex = i
-                    heldControlIndex = 1
-                    break
+            if evHoverInteractable:
+                print("Moving Point" if evHoverPoint else "Moving Control Point")
+                currentShape = history.append(currentShape)
+                evDraggingPoint = evHoverPoint
+                evDraggingControl = evHoverControl
             evDragInitiated = False
 
         elif evDroppedPoint:
@@ -207,14 +231,14 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
 
         elif evDraggingPoint:
             mouse_pos = pygame.mouse.get_pos()
-            currentShape[heldPointIndex] = (round(mouse_pos[0]), round(mouse_pos[1]))
+            currentShape[hoveredPointIndex] = (round(mouse_pos[0]), round(mouse_pos[1]))
         
         elif evDraggingControl:
             mouse_pos = pygame.mouse.get_pos()
-            if heldControlIndex == 0:
-                currentShape[heldPointIndex] = (round(mouse_pos[0]), round(mouse_pos[1]), currentShape[heldPointIndex][2], currentShape[heldPointIndex][3])
-            elif heldControlIndex == 1:
-                currentShape[heldPointIndex] = (currentShape[heldPointIndex][0], currentShape[heldPointIndex][1], round(mouse_pos[0]), round(mouse_pos[1]))
+            if hoveredControlIndex == 0:
+                currentShape[hoveredPointIndex] = (round(mouse_pos[0]), round(mouse_pos[1]), currentShape[hoveredPointIndex][2], currentShape[hoveredPointIndex][3])
+            elif hoveredControlIndex == 1:
+                currentShape[hoveredPointIndex] = (currentShape[hoveredPointIndex][0], currentShape[hoveredPointIndex][1], round(mouse_pos[0]), round(mouse_pos[1]))
 
         elif evAddPoint:
             # Add a point to the shape
@@ -246,7 +270,7 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
                     evNewActnNotif = True 
                     currNotifMessage = "Removed Point"
                     break
-                
+
         #! Important to always handle subsequent events on the next frame
         #! Prevent timing issues when facing blocking events like 
         #! saving a new file
