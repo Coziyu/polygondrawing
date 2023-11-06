@@ -2,7 +2,7 @@ from util import *
 from primative_renderer import *
 
 def save_shape(shape, width, height, filename):
-    path = os.path.join("shapes", filename)
+    path = os.path.join(config.OUTPUT_FOLDER, filename)
     file = open(path, "w+")
     outputShape = convert_shape_to_central_origin_coords(copy.deepcopy(shape), width, height)
     for i in range(len(outputShape)):
@@ -30,18 +30,24 @@ def add_point(shape):
         new_point = (round(last_point[0] + radius * math.cos(angle)), round(last_point[1] + radius * math.sin(angle)))
         shape.append(new_point)
 
-def shape_creater(window_width = 800, window_height = 800):
+def shape_creater(fileName, window_width = 800, window_height = 800):
     pygame.init()
 
     window = pygame.display.set_mode((window_width, window_height))
     pygame.display.set_caption("Shape Creater")
     clock = pygame.time.Clock()
-    font = pygame.font.SysFont("Arial" , 18 , bold = True)
+    font = pygame.font.SysFont("Courier New" , 12)        
 
-    # To keep track of any changes to the newshape array
-    history = Stack()
-    # The shape that is being created
-    currentShape = history.peek() #! Do not convert this to pygame coordinates
+    if fileName == "":
+        # If no filename is specified, create a new shape
+        currentShape = []
+    else:
+        # Load the shape from the file
+        currentShape = read_shape(os.path.join(config.OUTPUT_FOLDER,fileName))
+        currentShape = convert_shape_to_pygame_coords(currentShape, window_width, window_height)
+
+    # To keep track of changes to the shape
+    history = Stack(currentShape)
     running = True
 
 
@@ -61,7 +67,7 @@ def shape_creater(window_width = 800, window_height = 800):
     evSave = False
     # Poll Update Render Loop:
     while running:
-        # Poll Events
+        #* Poll Events
         for events in pygame.event.get():
             if events.type == pygame.QUIT:
                 running = False
@@ -95,9 +101,11 @@ def shape_creater(window_width = 800, window_height = 800):
                 elif events.key == pygame.K_TAB:
                     evPrintHistory = True
             
-        # Update
-        # ! Should probably refactor into a function with a swutch statement 
-        # ! using unique eventcodes to handle events buttt this is a school project so I don't care
+        #* Update
+        currTime = pygame.time.get_ticks()
+
+        # ! Should probably refactor into a function with a switch statement that takes in 
+        # ! unique eventcodes to handle events buttt this is a school project so I don't care
         if evPrintHistory:
             history.print()
             evPrintHistory = False
@@ -114,10 +122,14 @@ def shape_creater(window_width = 800, window_height = 800):
 
         elif evSave:
             print("Saving")
-            outFileName = input("Enter a filename: ")
-            if outFileName == "":
-                # Creates "shape (n).txt" where n is the number of shapes saved
-                outFileName = f"shape_{str(len(os.listdir('shapes')))}.txt"
+            if fileName == "":
+                outFileName = input("Enter a filename: ")
+                if outFileName == "":
+                    # Creates "shape (n).txt" where n is the number of shapes saved
+                    outFileName = f"shape_{str(len(os.listdir('shapes')))}"
+                outFileName += ".txt"
+            else:
+                outFileName = fileName
             save_shape(currentShape, window_width, window_height, outFileName)
             # Removes "Saving" from the terminal and replaces it with "Saved"
             print("\033[F\033[K\033[F\033[KSaved")
@@ -193,12 +205,12 @@ def shape_creater(window_width = 800, window_height = 800):
         
 
 
-        # Render
+        #* Render Objects
         # shape = convert_shape_to_pygame_coords(newshape, window_width, window_height)
         window.fill((0, 0, 0))
         for i in range(0,len(currentShape)):
             # The modulo handles wrapping around to the beginning of the list
             render_point(currentShape[i], window)
-            render_connection(currentShape[i], currentShape[(i + 1) % len(currentShape)], currentShape[(i + 2) % len(currentShape)], window)        
+            render_connection(currentShape[i], currentShape[(i + 1) % len(currentShape)], currentShape[(i + 2) % len(currentShape)], window)
             
         pygame.display.flip()

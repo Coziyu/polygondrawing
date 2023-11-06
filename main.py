@@ -18,10 +18,14 @@ def main():
     print("Input anything else to exit:")
     mode = input()
     if mode == "1":
-        shape_creater()
+        print("Load from file: (Enter filename or leave blank to create new shape)")
+        load = input()
+        shape_creater(load)
         pass
     elif mode == "2":
-        shape_renderer()
+        print("Load from file: (Enter filename or leave blank to load default shape)")
+        load = input()
+        shape_renderer(load)
     else:
         print("Exiting...")
         return

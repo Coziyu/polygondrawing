@@ -1,6 +1,6 @@
 from primative_renderer import *
 
-def shape_renderer(window_width = 800, window_height = 800):
+def shape_renderer(filename, window_width = 800, window_height = 800):
     # Initialize pygame
     pygame.init()
 
@@ -9,13 +9,13 @@ def shape_renderer(window_width = 800, window_height = 800):
 
     # TODO: Change this slightly
     # Take is a list of points and draws a shape connecting them with straight lines for now
-    shape = read_shape("shape.txt")
-    print(shape)
+    shape = read_shape(os.path.join(config.OUTPUT_FOLDER, filename))
+    # print(shape)
 
     # Shape has coordinates where (0,0) is the center of the screen
     # Whereas pygame has (0,0) as the top left corner
     shape = convert_shape_to_pygame_coords(shape, window_width, window_height)
-    print(shape)
+    # print(shape)
 
     # Draw the shape
     window.fill((0, 0, 0))

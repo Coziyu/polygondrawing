@@ -3,12 +3,17 @@ import pygame
 import math
 import random
 import os
+import config
 
 class Stack:
     def __init__(self):
         self.list = []
         self.list.append([])
         self.headIndex = 0
+
+    def __init__ (self, arr):
+        self.list = arr
+        self.headIndex = len(arr) - 1
     
     def append(self, item):
         if self.headIndex < len(self.list) - 1:
@@ -57,11 +62,8 @@ def read_shape(filename):
     # An element is either a pair of numbers delimted by a comma (Point)
     # Or a 4 numbers delimted by commas (Bezier Control Points)
 
-    # Open the file
     file = open(filename, "r")
-    # Read the file
     lines = file.readlines()
-    # Close the file
     file.close()
 
     # Parse the file
