@@ -288,8 +288,19 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
         window.fill((0, 0, 0))
         for i in range(0,len(currentShape)):
             # The modulo handles wrapping around to the beginning of the list
-            render_point(currentShape[i], window)
-            render_connection(currentShape[i], currentShape[(i + 1) % len(currentShape)], currentShape[(i + 2) % len(currentShape)], window)
+            pointColor = (255,255,255)
+            edgeColor = (255,255,255)
+            nextIndex = (i + 1) % len(currentShape)#(((i + 1) % len(currentShape)) + len(currentShape)) % len(currentShape)
+            # Highlight the edge of the point before the hovered point
+            if nextIndex == hoveredPointIndex:
+                edgeColor = (255, 255, 0)
+            if hoveredPointIndex == i:
+                pointColor = (173,255,47)
+                edgeColor = (255, 255, 0)
+            if len(currentShape[nextIndex]) == 4 and hoveredPointIndex == (nextIndex + 1) % len(currentShape):
+                edgeColor = (255, 255, 0)
+            render_point(currentShape[i], pointColor, window)
+            render_connection(currentShape[i], currentShape[(i + 1) % len(currentShape)], currentShape[(i + 2) % len(currentShape)], edgeColor, window)
 
 
         #* Render UI Elements
