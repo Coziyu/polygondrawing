@@ -10,8 +10,14 @@
 from shape_renderer import *
 from shape_creater import *
 
+def initialize():
+    # Create the output folder if it doesn't exist
+    if not os.path.exists(config.OUTPUT_FOLDER):
+        os.makedirs(config.OUTPUT_FOLDER)
+
 # Main Loop
 def main():
+    initialize()
     print("Enter Mode:")
     print("1. Shape Creater")
     print("2. Shape Renderer")
