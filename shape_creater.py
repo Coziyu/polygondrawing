@@ -30,6 +30,18 @@ def add_point(shape):
         new_point = (round(last_point[0] + radius * math.cos(angle)), round(last_point[1] + radius * math.sin(angle)))
         shape.append(new_point)
 
+def show_message(message, msgcolor, bgcolor, alpha, font, window):
+    # Render the message
+    text = font.render(message, True, msgcolor, bgcolor)
+    text.set_alpha(alpha * 255)
+    # Generate Text Box
+    textBox = text.get_rect()
+    # Flush the text box to the bottom right corner
+    textBox.bottomright = window.get_rect().bottomright
+    # Display the message
+    window.blit(text, textBox)
+
+
 def shape_creater(fileName, window_width = 800, window_height = 800):
     pygame.init()
 
@@ -50,9 +62,16 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
     history = Stack(currentShape)
     running = True
 
+    messageStartTime = -1
+    currTime = 0
+    currentMessage = ""
+    messageAlpha = 0
 
     heldPointIndex = 0
     heldControlIndex = 0
+
+    evNewMessage = False
+    evDisplayingMessage = False
 
     evAddPoint = False
     evAddCurve = False
@@ -65,6 +84,7 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
     evUndo = False
     evRedo = False
     evSave = False
+
     # Poll Update Render Loop:
     while running:
         #* Poll Events
@@ -113,11 +133,15 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
         elif evUndo:
             print("Undoing")
             currentShape = history.pop()
+            evNewMessage = True
+            currentMessage = "Undo"
             evUndo = False
 
         elif evRedo:
             print("Redoing")
             currentShape = history.unpop()
+            evNewMessage = True
+            currentMessage = "Redo"
             evRedo = False
 
         elif evSave:
@@ -133,6 +157,8 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
             save_shape(currentShape, window_width, window_height, outFileName)
             # Removes "Saving" from the terminal and replaces it with "Saved"
             print("\033[F\033[K\033[F\033[KSaved")
+            evNewMessage = True
+            currentMessage = f"Saved file to {os.path.join(os.getcwd(), config.OUTPUT_FOLDER, outFileName)}"
             evSave = False
 
         elif evDragInitiated:
@@ -165,6 +191,8 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
                 print("Dropped Point")
                 evDraggingPoint = False
                 evDraggingControl = False
+                evNewMessage = True
+                currentMessage = "Moved Point" if evDraggingPoint else "Moved Control Point"
             evDroppedPoint = False
 
         elif evDraggingPoint:
@@ -183,6 +211,8 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
             currentShape = history.append(currentShape)
             print("Adding Point")
             add_point(currentShape)
+            evNewMessage = True
+            currentMessage = "Added Point"
             evAddPoint = False
 
         elif evAddCurve:
@@ -191,6 +221,8 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
             print("Adding Curve")
             add_control_points(currentShape)
             add_point(currentShape)
+            evNewMessage = True
+            currentMessage = "Added Curve"
             evAddCurve = False
 
         elif evRemovingPoint:
@@ -201,8 +233,17 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
                     print("Removing Point")
                     currentShape = history.append(currentShape)
                     currentShape.pop(i)
+                    evNewMessage = True 
+                    currentMessage = "Removed Point"
                     break
         
+        if evNewMessage:
+            messageStartTime = currTime
+            messageAlpha = 1
+
+            evDisplayingMessage = True
+            evNewMessage = False
+
 
 
         #* Render Objects
@@ -212,5 +253,22 @@ def shape_creater(fileName, window_width = 800, window_height = 800):
             # The modulo handles wrapping around to the beginning of the list
             render_point(currentShape[i], window)
             render_connection(currentShape[i], currentShape[(i + 1) % len(currentShape)], currentShape[(i + 2) % len(currentShape)], window)
+
+
+        #* Render UI Elements
+
+
+        if evDisplayingMessage:
+            show_message(currentMessage, (255, 255, 255), (50, 50, 50), messageAlpha,font, window)
+            if currTime - messageStartTime > 2000:
+                currentMessage = ""
+                messageStartTime = -1
+                evDisplayingMessage = False
+            elif currTime - messageStartTime > 1000:
+                # Fades the message out over 1 second
+                # map time diff to alpha [1000:2000] -> [1,0]
+                messageAlpha = max(1 - (currTime - messageStartTime - 1000)/1000, 0)
+    
+
             
         pygame.display.flip()
