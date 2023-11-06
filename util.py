@@ -12,8 +12,8 @@ class Stack:
         self.headIndex = 0
 
     def __init__ (self, arr):
-        self.list = arr
-        self.headIndex = len(arr) - 1
+        self.list = [arr]
+        self.headIndex = 0
     
     def append(self, item):
         if self.headIndex < len(self.list) - 1:
