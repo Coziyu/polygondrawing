@@ -41,6 +41,9 @@ def show_action_notification(message, msgcolor, bgcolor, alpha, font, window):
     # Display the message
     window.blit(text, textBox)
 
+# TODO Implement edge type change
+# [ ] Implement Mouse Click edge identification
+# [ ] Determine edge type
 
 def shape_creater(fileName, window_width = 800, window_height = 800):
     pygame.init()
