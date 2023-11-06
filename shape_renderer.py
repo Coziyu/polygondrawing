@@ -21,7 +21,7 @@ def shape_renderer(filename, window_width = 800, window_height = 800):
     window.fill((0, 0, 0))
     for i in range(0,len(shape)):
         # The modulo handles wrapping around to the beginning of the list
-        render_connection(shape[i], shape[(i + 1) % len(shape)], shape[(i + 2) % len(shape)], window)
+        render_connection(shape[i], shape[(i + 1) % len(shape)], shape[(i + 2) % len(shape)], (255,255,255), window)
         
     pygame.display.flip()
     
